@@ -21,7 +21,7 @@ const menuOptions = [
 
 function Header() {
   return (
-    <div className='flex justify-between items-center p-4'>
+    <div className="flex justify-between items-center p-4">
       {/* {Logo} */}
       <div className="flex gap-2 items-center">
         <Image src={"/logo.png"} alt="logo" width={50} height={50} />
@@ -29,10 +29,10 @@ function Header() {
       </div>
 
       {/* {Menu Option} */}
-      <div className='flex gap-7 items-center'>
+      <div className="flex gap-7 items-center">
         {menuOptions.map((menu, index) => (
           <Link key={index} href={menu.path}>
-            <h2 className='text-lg hover:scale-105 transition-all hover:text-primary'>{menu.name}</h2>
+            <h2 className="text-lg hover:scale-105 transition-all hover:text-primary">{menu.name}</h2>
           </Link>
         ))}
       </div>
