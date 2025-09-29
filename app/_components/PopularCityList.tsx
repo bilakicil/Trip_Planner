@@ -9,7 +9,7 @@ export function PopularCityList() {
   ));
 
   return (
-    <div className="w-full h-full py-20">
+    <div className="w-full h-full py-20 px-6 md:px-20">
       <h2 className="max-w-7xl pl-4 mx-auto text-xl md:text-3xl font-bold text-neutral-800 dark:text-neutral-200 font-sans">
         Destinasi Populer
       </h2>
@@ -111,3 +111,5 @@ const data = [
     content: <DummyContent />,
   },
 ];
+
+

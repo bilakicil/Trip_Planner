@@ -65,22 +65,6 @@ function Hero() {
             </div>
           ))}
         </div>
-        <div className="flex items-center justify-center flex-col">
-          <h2 className="my-7 mt-14 flex gap-2 text-center">
-            Not Sure where to start? <strong>See how it works</strong>
-            <ArrowDown></ArrowDown>
-          </h2>
-          {/* {Vidio Section} */}
-          <div className="w-full max-w-2xl mx-auto">
-            <HeroVideoDialog
-              className="rounded-xl overflow-hidden shadow-lg"
-              animationStyle="from-center"
-              videoSrc="https://www.example.com/dummy-video"
-              thumbnailSrc="http://mma.prnewswire.com/media/2401528/1_MindtripProduct.jpg?p=facebook"
-              thumbnailAlt="Dummy Video Thumbnail"
-            />
-          </div>
-        </div>
       </div>
     </div>
   );
