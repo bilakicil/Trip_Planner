@@ -27,26 +27,25 @@ const suggestions = [
 
 function Hero() {
   return (
-    <div className="mt-24 flex items-center flex justify-center">
+    <div className="mt-36 items-center flex justify-center">
       {/* {Content} */}
-      <div className="max-w-3xl max-w-full text-center space-y-6">
-        <h1>
-          <span className="text-primary text-xl md:text-2xl font-bold">
-            Halo, Saya ZenTrip AI
-          </span>{" "}
+      <div className="max-w-3xl text-center space-y-6">
+        <h1 className="text-xl md:text-2xl font-bold">
+          Halo, Saya
+          <span className="text-primary"> ZenTrip AI</span>{" "}
           <span className="text-xl md:text-2xl font-bold">
             Perencana Perjalanan Pribadimu
           </span>
         </h1>
-        <p className="text-lg">
+        <p className="text-md text-gray-600">
           Cukup beritahu impian perjalananmu dan ZenTrip AI akan urus sisanya
         </p>
         {/* {Input Box} */}
         <div>
-          <div className="border rounded-2xl p-4 relative">
+          <div className="border-none rounded-2xl p-4 relative">
             <Textarea
               placeholder="Saya ingin melakukan perjalan ke Jepang....."
-              className="w-full h-28 bg-transparent border-none"
+              className="w-full h-28 bg-transparent border resize-none"
             ></Textarea>
             <Button size={"icon"} className="absolute bottom-6 right-6">
               <Send className="h-4 w-4" />

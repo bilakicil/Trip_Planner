@@ -13,16 +13,16 @@ export default function Features() {
     },
     {
       icon: <FileText className="h-7 w-7 text-blue-500" />,
-      title: "Informasi Administrasi Lengkap",
+      title: "Informasi Administrasi",
     },
   ];
 
   return (
-    <section className="pt-6 pb-12">
+    <section className="pt-14 pb-12">
       <h2 className="max-w-7xl pl-25 mx-auto text-xl md:text-3xl font-bold text-neutral-800 dark:text-neutral-200 font-sans">
         Fitur Unggulan
       </h2>
-      <div className="flex gap-10 items-start justify-center flex-wrap">
+      <div className="flex gap-10 items-start justify-center flex-wrap mt-14">
         {fitur.map((f, i) => (
           <div
             key={i}
@@ -38,4 +38,3 @@ export default function Features() {
     </section>
   );
 }
-

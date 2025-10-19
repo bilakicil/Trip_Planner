@@ -1,12 +1,15 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
+import { usePathname } from "next/navigation";
 
 const menuOptions = [
   {
     name: "Home",
-    path: "/home",
+    path: "/",
   },
   {
     name: "Planner",
@@ -14,13 +17,14 @@ const menuOptions = [
   },
   {
     name: "Panduan Pengguna",
-    path: "/panduan-pengguna",
+    path: "/panduan",
   },
 ];
 
 function Header() {
+  const pathname = usePathname();
   return (
-    <header className="sticky top-0 z-50 bg-white shadow-md rounded-b-lg w-full">
+    <header className="fixed top-0 z-50 bg-white shadow-md w-full">
       <div className="flex justify-between items-center px-6 py-3">
         {/* Logo */}
         <div className="flex gap-2 items-center">
@@ -32,7 +36,12 @@ function Header() {
         <nav className="flex gap-7 items-center">
           {menuOptions.map((menu, index) => (
             <Link key={index} href={menu.path}>
-              <h2 className="text-base font-medium hover:scale-105 transition-all hover:text-primary">
+              <h2
+                className={
+                  `text-base font-medium hover:scale-105 transition-all hover:text-primary ` +
+                  (pathname === menu.path ? "text-primary" : "text-gray-700")
+                }
+              >
                 {menu.name}
               </h2>
             </Link>
@@ -40,9 +49,9 @@ function Header() {
         </nav>
 
         {/* Login Button */}
-        <Button>
-          Login
-        </Button>
+        <Link href={"/login"}>
+          <Button>Login</Button>
+        </Link>
       </div>
     </header>
   );
