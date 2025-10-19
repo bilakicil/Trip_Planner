@@ -29,15 +29,15 @@ function Hero() {
   return (
     <div className="mt-36 items-center flex justify-center">
       {/* {Content} */}
-      <div className="max-w-3xl text-center space-y-6">
-        <h1 className="text-xl md:text-2xl font-bold">
+      <div className="max-w-3xl text-center">
+        <h1 className="text-xl md:text-2xl font-bold mb-2">
           Halo, Saya
           <span className="text-primary"> ZenTrip AI</span>{" "}
           <span className="text-xl md:text-2xl font-bold">
             Perencana Perjalanan Pribadimu
           </span>
         </h1>
-        <p className="text-md text-gray-600">
+        <p className="text-md text-gray-600 mb-7">
           Cukup beritahu impian perjalananmu dan ZenTrip AI akan urus sisanya
         </p>
         {/* {Input Box} */}

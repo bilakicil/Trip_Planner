@@ -11,7 +11,7 @@ export default function PlannerPage() {
   ];
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 mt-14">
       {/* Sidebar */}
       <aside className="w-64 bg-blue-900 text-white flex flex-col p-4">
         <h2 className="text-2xl font-bold mb-6">ZenTrip AI</h2>
