@@ -14,7 +14,6 @@ import {
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "motion/react";
 import Image, { ImageProps } from "next/image";
-import { useOutsideClick } from "@/hooks/use-outside-click";
 
 interface CarouselProps {
   items: React.ReactElement[];
@@ -71,7 +70,7 @@ export const Carousel = ({ items, initialScroll = 0 }: CarouselProps) => {
 
   const handleCardClose = (index: number) => {
     if (carouselRef.current) {
-      const cardWidth = isMobile() ? 230 : 200; // (md:w-96)
+      const cardWidth = isMobile() ? 230 : 300; // (md:w-96)
       const gap = isMobile() ? 4 : 8;
       const scrollPosition = (cardWidth + gap) * (index + 1);
       carouselRef.current.scrollTo({
@@ -124,7 +123,7 @@ export const Carousel = ({ items, initialScroll = 0 }: CarouselProps) => {
                   },
                 }}
                 key={"card" + index}
-                className="rounded-3xl last:pr-[5%] md:last:pr-[33%]"
+                className="rounded-3xl last:pr-0"
               >
                 {item}
               </motion.div>
@@ -187,10 +186,6 @@ export const Card = ({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open, handleClose]);
 
-  useOutsideClick(containerRef as React.RefObject<HTMLDivElement>, () =>
-    handleClose()
-  );
-
   const handleOpen = () => {
     setOpen(true);
   };
@@ -242,7 +237,7 @@ export const Card = ({
         onClick={handleOpen}
         className="relative z-10 flex h-80 w-56 flex-col items-start justify-start overflow-hidden rounded-3xl bg-gray-100 md:h-[30rem] md:w-64 dark:bg-neutral-900"
       >
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-30 h-full bg-gradient-to-b from-black/50 via-transparent to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-30 h-full bg-gradient-to-b from-black/50 to-transparent" />
         <div className="relative z-40 p-8">
           <motion.p
             layoutId={layout ? `category-${card.category}` : undefined}

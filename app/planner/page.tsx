@@ -1,32 +1,90 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Send } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import axios from "axios";
+import { useSearchParams } from "next/navigation";
+
+interface Message {
+  sender: "user" | "ai";
+  text: string;
+}
 
 export default function PlannerPage() {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const searchParams = useSearchParams();
+  const query = searchParams.get("query") || "";
+  const [hasAutoSent, setHasAutoSent] = useState(false);
+
+  const handleSend = async (customInput?: string) => {
+    const value = typeof customInput === "string" ? customInput : input;
+    if (!value.trim()) return;
+
+    const newMessages: Message[] = [
+      ...messages,
+      { sender: "user", text: value },
+    ];
+    setMessages(newMessages);
+    setInput("");
+
+    try {
+      // Kirim ke API route (Gemini handler)
+      const res = await axios.post("/api/aimodel", {
+        messages: newMessages.map((m) => ({
+          role: m.sender === "user" ? "user" : "assistant",
+          content: m.text,
+        })),
+      });
+
+      // Ambil respons dari AI
+      const data = res.data;
+      const aiReply: Message = {
+        sender: "ai",
+        text: data.resp ?? "Maaf, saya tidak dapat memproses permintaanmu.",
+      };
+
+      setMessages((prev) => [...prev, aiReply]);
+    } catch (error) {
+      console.error("❌ Error saat koneksi ke AI:", error);
+      const aiReply: Message = {
+        sender: "ai",
+        text: "Terjadi kesalahan saat menghubungkan ke AI.",
+      };
+      setMessages((prev) => [...prev, aiReply]);
+    }
+  };
+
+  // Otomatis kirim jika ada query di URL
+  useEffect(() => {
+    if (query && !hasAutoSent) {
+      setInput(query);
+      handleSend(query);
+      setHasAutoSent(true);
+    }
+  }, [query, hasAutoSent]);
+
   const trips = [
-    { title: "Trip ke Tokyo 2025", img: "/tokyo.jpg" },
-    { title: "Trip ke Tokyo 2024", img: "/tokyo2.jpg" },
-    { title: "Liburan Bali 2024", img: "/bali.jpg" },
-    { title: "Eksplorasi Italia", img: "/italia.jpg" },
+    { title: "Trip ke Tokyo 2025" },
+    { title: "Trip ke Tokyo 2024" },
+    { title: "Liburan Bali 2024" },
+    { title: "Eksplorasi Italia" },
   ];
 
   return (
-    <div className="flex h-screen bg-gray-50 mt-14">
+    <div className="flex h-[90.5vh] bg-gray-50">
       {/* Sidebar */}
       <aside className="w-64 bg-blue-900 text-white flex flex-col p-4">
-        <h2 className="text-2xl font-bold mb-6">ZenTrip AI</h2>
-        <p className="text-sm mb-3 text-gray-300">Riwayat Perjalanan</p>
+        <p className="text-xl mb-3 text-white p-3 font-bold">
+          Riwayat Perjalanan
+        </p>
         <div className="space-y-3">
           {trips.map((trip, i) => (
             <div
               key={i}
-              className="flex items-center gap-2 p-2 rounded-md hover:bg-blue-800 cursor-pointer"
+              className="flex items-center gap-2 p-3 rounded-md hover:bg-blue-800 cursor-pointer text-gray-200"
             >
-              <img
-                src={trip.img}
-                alt={trip.title}
-                className="w-10 h-10 rounded-md object-cover"
-              />
               <span className="text-sm">{trip.title}</span>
             </div>
           ))}
@@ -34,55 +92,46 @@ export default function PlannerPage() {
       </aside>
 
       {/* Chat Section */}
-      <main className="flex-1 flex flex-col">
-        {/* Header */}
-        <div className="p-6 border-b bg-white shadow-sm">
-          <h1 className="text-2xl font-bold">Trip ke Paris selama 7 hari</h1>
-        </div>
-
+      <main className="flex-1 flex flex-col overflow-y-auto">
         {/* Chat content */}
-        <div className="flex-1 p-6 space-y-4 overflow-y-auto">
-          {/* User message */}
-          <div className="flex justify-start">
-            <div className="bg-blue-100 px-4 py-2 rounded-lg max-w-md">
-              Saya mau ke Paris selama 7 hari
+        <div className="flex-1 p-6 space-y-4 ">
+          {messages.map((msg, i) => (
+            <div
+              key={i}
+              className={`flex ${
+                msg.sender === "user" ? "justify-end" : "justify-start"
+              }`}
+            >
+              <div
+                className={`px-5 py-3 rounded-lg max-w-md whitespace-pre-wrap ${
+                  msg.sender === "user"
+                    ? "bg-blue-100 text-gray-800"
+                    : "bg-white border shadow-sm text-gray-700"
+                }`}
+              >
+                {msg.text}
+              </div>
             </div>
-          </div>
-
-          {/* AI reply */}
-          <div className="flex justify-start">
-            <div className="bg-white shadow-md border rounded-lg p-4 max-w-lg space-y-3">
-              <h3 className="font-semibold">Itinerary Harian</h3>
-              <p>Hari 1: Museum Louvre & Katedral Notre Dame</p>
-
-              <h3 className="font-semibold mt-4">Persyaratan Administrasi</h3>
-              <ul className="list-disc pl-5 text-sm">
-                <li>WNI butuh Visa Schengen (jika 90 hari)</li>
-                <li>Paspor minimal berlaku</li>
-              </ul>
-
-              <h3 className="font-semibold mt-4">Rincian Perkiraan Harga</h3>
-              <ul className="list-disc pl-5 text-sm">
-                <li>Penerbangan (IDR 10-15jt)</li>
-                <li>Akomodasi</li>
-                <li>Konsumsi (IDR 3-4jt)</li>
-              </ul>
-            </div>
-          </div>
+          ))}
         </div>
 
-        {/* Input box */}
-        <div className="p-4 border-t bg-white">
-          <div className="flex items-center gap-2 border rounded-lg p-2">
-            <input
-              type="text"
-              placeholder="Ketik pesanmu atau perbarui rencana..."
-              className="flex-1 outline-none px-2 text-sm"
-            />
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg">
-              <Send className="h-4 w-4" />
-            </button>
-          </div>
+        {/* Input box aktif */}
+        <div className="p-6 border-t bg-white flex items-center gap-2">
+          <Textarea
+            placeholder="Tulis rencana perjalananmu..."
+            className="flex-1 resize-none h-18"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
+          />
+          <Button onClick={() => handleSend()} disabled={!input.trim()}>
+            <Send className="w-4 h-4" />
+          </Button>
         </div>
       </main>
     </div>

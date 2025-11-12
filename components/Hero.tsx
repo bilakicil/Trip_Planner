@@ -1,10 +1,12 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowDown, Globe2, Landmark, Plane, Send } from "lucide-react";
 import { Content } from "next/font/google";
 import { title } from "node:process";
-import React from "react";
-import { HeroVideoDialog } from "@/components/ui/hero-video-dialog";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 
 const suggestions = [
   {
@@ -26,6 +28,14 @@ const suggestions = [
 ];
 
 function Hero() {
+  const [input, setInput] = useState("");
+  const router = useRouter();
+
+  const handleSend = () => {
+    if (!input.trim()) return; 
+    router.push(`/planner?query=${encodeURIComponent(input)}`);
+  };
+
   return (
     <div className="mt-36 items-center flex justify-center">
       {/* {Content} */}
@@ -46,8 +56,14 @@ function Hero() {
             <Textarea
               placeholder="Saya ingin melakukan perjalan ke Jepang....."
               className="w-full h-28 bg-transparent border resize-none"
+              value={input} // isi TextArea diambil dari state input
+              onChange={(e) => setInput(e.target.value)} // update state saat user mengetik
             ></Textarea>
-            <Button size={"icon"} className="absolute bottom-6 right-6">
+            <Button
+              size="icon"
+              className="absolute bottom-6 right-6"
+              onClick={handleSend} // panggil fungsi handleSend saat diklik
+            >
               <Send className="h-4 w-4" />
             </Button>
           </div>
@@ -57,7 +73,13 @@ function Hero() {
           {suggestions.map((suggestions, index) => (
             <div
               key={index}
-              className="flex items-center gap-2 border rounded-full p-2 cursor-pointer hover:bg-primary hover:text-white"
+              onClick={() => {
+                // Saat user klik suggestion, langsung pindah ke planner
+                router.push(
+                  `/planner?query=${encodeURIComponent(suggestions.title)}`
+                );
+              }}
+              className="flex items-center gap-2 border rounded-full p-2 cursor-pointer hover:bg-primary hover:text-white transition"
             >
               {suggestions.icon}
               <h2 className="text-sm">{suggestions.title}</h2>
