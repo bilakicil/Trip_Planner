@@ -2,8 +2,9 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
-import { auth, signOut } from "@/auth"; // pastikan signOut diexport dari auth.ts
+import { auth } from "@/auth"; // pastikan signOut diexport dari auth.ts
 import Nav from "./Nav";
+import { logoutUser } from "@/lib/actions/auth-actions";
 
 const menuOptions = [
   { name: "Home", path: "/" },
@@ -28,12 +29,7 @@ const Header = async () => {
 
         {/* Login / Logout Button */}
         {session?.user ? (
-          <form
-            action={async () => {
-              "use server";
-              await signOut({ redirectTo: "/" });
-            }}
-          >
+          <form action={logoutUser}>
             <Button variant="secondary" type="submit">
               Logout
             </Button>
