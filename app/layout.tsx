@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
 import Header from "../components/Header";
+import { SessionProvider } from "next-auth/react";
 
 const font = Outfit({
   variable: "--font-Outfit",
@@ -22,8 +23,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${font.className} antialiased`}>
-        <Header />
-        {children}
+        <SessionProvider>
+          <Header />
+          {children}
+        </SessionProvider>
       </body>
     </html>
   );

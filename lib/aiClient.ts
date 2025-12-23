@@ -1,4 +1,5 @@
 import axios from "axios";
+import { FinalResponse } from "./types/FinalResponse";
 
 export interface ChatMessage {
   sender: "user" | "ai";
@@ -17,17 +18,16 @@ export interface AIResponse {
   type:
     | "text"
     | "options"
-    | "complete"
     | "select-group"
     | "select-budget"
     | "select-durasi"
-    | "select-tema";
-  text: string;
-  options?: Array<{
-    id: string;
-    label: string;
-    icon: string;
-  }>;
+    | "select-tema"
+    | "complete";
+
+  text?: string;
+  options?: { id: string; label: string; icon: string }[];
+
+  data?: FinalResponse; // FINAL JSON
 }
 
 export async function sendToAI(messages: ChatMessage[]): Promise<AIResponse> {
@@ -43,11 +43,9 @@ export async function sendToAI(messages: ChatMessage[]): Promise<AIResponse> {
 
     return {
       type: data.type || "text",
-      text:
-        data.text ||
-        data.resp ||
-        "Maaf, saya tidak dapat memproses permintaanmu.",
+      text: data.text,
       options: data.options || [],
+      data: data.data || undefined,
     };
   } catch (error) {
     console.error("Error connecting AI:", error);

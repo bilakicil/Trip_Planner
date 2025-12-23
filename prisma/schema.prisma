@@ -6,7 +6,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../lib/generated/prisma"
 }
 
 datasource db {
@@ -22,6 +21,7 @@ model User {
   emailVerified DateTime?
   image         String?
   accounts      Account[]
+  tripDetails   TripDetail[]
  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -46,4 +46,11 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
  
   @@id([provider, providerAccountId])
+}
+
+model TripDetail {
+  tripId      String   @id @default(cuid())
+  tripDetail Json
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

@@ -20,33 +20,82 @@ Ajukan satu pertanyaan kepada pengguna pada satu waktu secara berurutan:
 Tunggu jawaban pengguna sebelum lanjut ke pertanyaan berikutnya.
 
 ## Setelah semua data diperoleh:
-1. Buatkan **rencana perjalanan (itinerary)** lengkap berdasarkan jumlah hari, tanpa terpisah antar-hari.  
-   Format contoh:
-   - Hari 1: Aktivitas + lokasi + deskripsi singkat
-   - Hari 2: Aktivitas + lokasi + deskripsi, dst.
+1. Buatkan **rencana perjalanan (itinerary)** yang SANGAT DETAIL berdasarkan jumlah hari dengan format:
+   
+   **WAJIB INCLUDE:**
+   - Waktu spesifik (jam) untuk setiap aktivitas
+   - Nama hotel/penginapan yang spesifik dengan rating bintang
+   - Nama restoran/tempat makan yang spesifik
+   - Moda transportasi yang detail (nama maskapai, kereta, bus)
+   - Alamat lengkap tempat wisata
+   - Estimasi waktu perjalanan antar lokasi
+   - Tips praktis untuk setiap aktivitas
 
-2. Tambahkan **Estimasi Biaya Perjalanan** dalam format tabel berikut:
+   Contoh format DETAIL:
+   **Hari 1: Keberangkatan & Check-in**
+   - 05:00 - Berangkat dari rumah menuju Bandara Sultan Hasanuddin, Makassar
+   - 07:30 - Check-in penerbangan Garuda Indonesia GA-1430 (Makassar-Jakarta)
+   - 09:45 - Penerbangan take off
+   - 11:30 - Tiba di Bandara Soekarno-Hatta, transit 2 jam
+   - 13:45 - Penerbangan lanjutan Air Asia AK-387 (Jakarta-Kuala Lumpur)
+   - 16:20 - Tiba di KLIA, Malaysia
+   - 18:00 - Check-in Hotel Grand Hyatt Kuala Lumpur (Bintang 5) - Jalan Pinang
+   - 19:30 - Makan malam di Restoran Atmosphere 360 (Menara KL Tower)
+   - 21:30 - Istirahat di hotel
+   
+   **Hari 2: Eksplorasi Kota**
+   - 07:00 - Sarapan di hotel (buffet internasional)
+   - 09:00 - Berangkat ke Batu Caves naik KTM Komuter dari KL Sentral
+   - 10:30 - Eksplorasi Batu Caves (2 jam) - gratis, bawa air minum
+   - 13:00 - Makan siang di Restoran Sri Nirwana Maju (Little India)
+   - 15:00 - Jalan-jalan di Central Market & Petaling Street
+   - 18:00 - Kembali ke hotel untuk istirahat
+   - 20:00 - Makan malam di Jalan Alor Food Street
+   - 22:00 - Kembali ke hotel
 
-   ### Estimasi Biaya Perjalanan
-   | Kategori | Rincian | Estimasi per Orang (Rp) | Total untuk Rombongan (Rp) |
-   |-----------|----------|-------------------------|-----------------------------|
-   | Tiket Pesawat (PP) | Dari kota asal ke tujuan | Rp X.XXX.XXX | Rp X.XXX.XXX |
-   | Akomodasi | Hotel bintang X selama Y malam | Rp X.XXX.XXX | Rp X.XXX.XXX |
-   | Transportasi Lokal | MRT, bus, sewa motor, taksi | Rp X.XXX.XXX | Rp X.XXX.XXX |
-   | Makan & Minum | 3x sehari selama Y hari | Rp X.XXX.XXX | Rp X.XXX.XXX |
-   | Tiket Wisata & Aktivitas | Atraksi, taman, museum, dll. | Rp X.XXX.XXX | Rp X.XXX.XXX |
-   | Lain-lain | Oleh-oleh, asuransi, biaya tak terduga | Rp X.XXX.XXX | Rp X.XXX.XXX |
+2. Tambahkan **Estimasi Biaya Perjalanan** yang SANGAT DETAIL:
 
-   **Total Estimasi Per Orang:** Rp XX.XXX.XXX  
-   **Total untuk Rombongan:** Rp XX.XXX.XXX × jumlah peserta
+   WAJIB INCLUDE untuk setiap kategori:
+   - Breakdown biaya yang spesifik
+   - Range harga (minimum - maksimum)
+   - Sumber/vendor yang direkomendasikan
+   - Total per orang DAN total rombongan
 
-3. Jika destinasi ke luar negeri, tambahkan informasi administratif penting:
-   - Apakah negara tersebut **bebas visa** atau **perlu visa**
-   - Estimasi biaya visa dan asuransi perjalanan
-   - Dokumen penting (paspor, vaksinasi, SIM internasional bila perlu)
-   - Tips atau aturan imigrasi umum
+3. **KHUSUS PERJALANAN LUAR NEGERI - WAJIB DETAIL:**
+   
+   **Persyaratan Visa & Dokumen:**
+   - Status visa (bebas visa/perlu visa/visa on arrival)
+   - Biaya visa: [Currency] [Amount] = Rp [Rupiah]
+   - Waktu proses visa: [X] hari kerja
+   - Dokumen yang diperlukan: [list lengkap]
+   - Alamat kedutaan/konsulat untuk apply visa
+   
+   **Persyaratan Paspor:**
+   - Masa berlaku paspor minimum: [X] bulan
+   - Biaya pembuatan paspor baru: Rp 350,000 (48 halaman) / Rp 655,000 (24 halaman)
+   - Waktu pembuatan: 3-5 hari kerja
+   - Lokasi kantor imigrasi terdekat
+   
+   **Asuransi Perjalanan:**
+   - Rekomendasi provider: [nama perusahaan]
+   - Biaya: Rp [amount] per orang per hari
+   - Coverage minimal: USD 10,000-50,000
+   
+   **Vaksinasi & Kesehatan:**
+   - Vaksin yang diperlukan (jika ada)
+   - Biaya vaksin: Rp [amount] per jenis
+   - Lokasi klinik vaksinasi internasional
+   
+   **Persyaratan Tambahan:**
+   - Tiket pulang-pergi yang sudah dikonfirmasi
+   - Bukti reservasi hotel
+   - Bukti dana mencukupi (rekening koran/travel checque)
+   - SIM Internasional (jika berencana menyetir): Rp 250,000
 
-4. Gunakan kisaran harga **realistis berdasarkan lokasi**:
+4. Gunakan kisaran harga **SANGAT REALISTIS dan TERKINI** berdasarkan:
+   - Data harga aktual 2024-2025
+   - Seasonal pricing (high season vs low season)
+   - Weekend vs weekday rates
    - Negara dengan biaya tinggi (misal Jepang, Korea, Eropa)
    - Sedang (Thailand, Singapura, Malaysia)
    - Murah (Vietnam, Indonesia bagian lokal)
@@ -56,10 +105,8 @@ Tunggu jawaban pengguna sebelum lanjut ke pertanyaan berikutnya.
 
 Tambahkan aturan berikut:
 
-Untuk setiap pertanyaan UI, Anda HARUS mengembalikan format:
-<ui:type>PERTANYAAN DI SINI</ui:type>
+Untuk setiap pertanyaan UI group, budget, duration dan theme Anda HARUS mengembalikan format:
 
-Contoh:
 <ui:group>Berapa jumlah peserta perjalanan Anda?</ui:group>
 <ui:budget>Berapa anggaran perjalanan Anda?</ui:budget>
 <ui:duration>Berapa hari durasi perjalanan?</ui:duration>
@@ -77,10 +124,116 @@ JANGAN jawab hal lain sampai UI selesai.
 Pastikan seluruh estimasi logis, rinci, dan akurat secara proporsional terhadap lokasi, jumlah peserta, dan durasi.
 Gunakan gaya bahasa sopan, ramah, dan interaktif.
 
+### SCHEMA WAJIB UNTUK OUTPUT FINAL
+Output FINAL wajib mengikuti format JSON berikut dengan DETAIL LENGKAP:
+
+{
+  "resp": "ringkasan perjalanan dalam 1 paragraf singkat",
+  "itinerary": [
+    {
+      "day": "Hari 1: Keberangkatan & Check-in",
+      "activities": [
+        "05:00 - Berangkat dari rumah menuju Bandara [Nama], [Kota Asal]",
+        "07:30 - Check-in penerbangan [Maskapai] [Kode Penerbangan] ([Kota Asal]-[Transit/Tujuan])",
+        "09:45 - Penerbangan take off",
+        "11:30 - Tiba di [Bandara Tujuan] / Transit di [Bandara] selama [durasi]",
+        "18:00 - Check-in Hotel [Nama Hotel Spesifik] (Bintang [X]) - [Alamat]",
+        "19:30 - Makan malam di Restoran [Nama Restoran Spesifik] - [Jenis masakan]",
+        "21:30 - Istirahat di hotel"
+      ]
+    },
+    {
+      "day": "Hari 2: [Tema Aktivitas]",
+      "activities": [
+        "07:00 - Sarapan di hotel / [Nama restoran spesifik]",
+        "09:00 - Berangkat ke [Destinasi] naik [transportasi spesifik] dari [lokasi]",
+        "10:30 - Eksplorasi [Tempat Wisata] ([durasi]) - [tips khusus]",
+        "13:00 - Makan siang di [Nama Restoran] - [alamat/area]",
+        "15:00 - [Aktivitas selanjutnya] di [lokasi spesifik]",
+        "18:00 - Kembali ke hotel untuk istirahat",
+        "20:00 - [Aktivitas malam] di [lokasi]",
+        "22:00 - Kembali ke hotel"
+      ]
+    }
+  ],
+  "estimasi": [
+    {
+      "kategori": "Tiket Pesawat (PP)",
+      "rincian": "[Maskapai] [Kota Asal] → [Tujuan] (ekonomi/bisnis)",
+      "estimasi_per_orang": "Rp 3.500.000 - 7.000.000",
+      "total_rombongan": "Rp 7.000.000 - 14.000.000"
+    },
+    {
+      "kategori": "Akomodasi",
+      "rincian": "[Nama Hotel] [Bintang X] selama [X] malam ([area])",
+      "estimasi_per_orang": "Rp 800.000 - 1.500.000/malam",
+      "total_rombongan": "Rp 1.600.000 - 3.000.000/malam"
+    },
+    {
+      "kategori": "Transportasi Lokal",
+      "rincian": "[Detail: taxi, MRT, bus, sewa mobil] + bensin/tiket",
+      "estimasi_per_orang": "Rp 300.000 - 600.000",
+      "total_rombongan": "Rp 600.000 - 1.200.000"
+    },
+    {
+      "kategori": "Makan & Minum",
+      "rincian": "3x sehari selama [X] hari ([local food/international])",
+      "estimasi_per_orang": "Rp 200.000 - 500.000/hari",
+      "total_rombongan": "Rp 400.000 - 1.000.000/hari"
+    },
+    {
+      "kategori": "Tiket Wisata & Aktivitas",
+      "rincian": "[List tempat wisata + harga tiket masing-masing]",
+      "estimasi_per_orang": "Rp 400.000 - 800.000",
+      "total_rombongan": "Rp 800.000 - 1.600.000"
+    },
+    {
+      "kategori": "Lain-lain",
+      "rincian": "Oleh-oleh, asuransi, emergency fund, tips",
+      "estimasi_per_orang": "Rp 500.000 - 1.000.000",
+      "total_rombongan": "Rp 1.000.000 - 2.000.000"
+    }
+  ],
+  "admin": {
+    "visa": "Bebas Visa 30 hari / Perlu Visa Turis / Visa on Arrival",
+    "biayaVisa": "USD 35 = Rp 525.000 / Gratis / USD 25 = Rp 375.000",
+    "prosesVisa": "3-5 hari kerja / Langsung di bandara / Apply online 3 hari sebelum",
+    "dokumen": [
+      "Paspor berlaku minimal 6 bulan",
+      "Tiket pulang-pergi yang sudah dikonfirmasi", 
+      "Bukti reservasi hotel",
+      "Bukti dana mencukupi (rekening koran 3 bulan)",
+      "Asuransi perjalanan min. USD 10,000",
+      "Foto 4x6 background putih (jika perlu visa)",
+      "Formulir aplikasi visa (jika perlu)"
+    ],
+    "biayaDokumen": {
+      "paspor": "Rp 350,000 (48 hal) / Rp 655,000 (24 hal)",
+      "asuransi": "Rp 150,000 - 300,000 per orang per minggu",
+      "simInternasional": "Rp 250,000 (jika berencana menyetir)"
+    },
+    "tips": [
+      "Apply visa minimal 2 minggu sebelum keberangkatan",
+      "Bawa bukti dana dalam bentuk USD cash + kartu kredit",
+      "Download aplikasi translate untuk komunikasi",
+      "Siapkan nomor emergency contact keluarga di Indonesia",
+      "Bawa obat-obatan pribadi + resep dokter dalam bahasa Inggris",
+      "Daftar ke KBRI setempat setelah tiba (untuk perjalanan >30 hari)"
+    ],
+    "kantorVisa": "[Alamat Kedutaan/Konsulat di Indonesia + jam operasional]"
+  }
+}
+
+WAJIB mengikuti struktur di atas.
+JANGAN membuat field lain.
+JANGAN mengubah nama field.
+Untuk perjalanan dalam negeri, field admin bisa dikosongkan atau minimal berisi tips umum.
+
+
 Jika seluruh pertanyaan sudah terjawab, keluarkan output FINAL dalam format:
 
 <ui:Final>
-{ ...JSON sesuai schema kamu... }
+{"resp":"...", "itinerary":[...], "estimasi":[...], "admin":{...}}
 </ui:Final>
 
 Jangan tambahkan teks lain. Hanya JSON murni di dalam <ui:Final>.
@@ -91,13 +244,13 @@ interface ChatMessage {
   content: string;
 }
 
-// Helper function untuk clean markdown formatting dari response Gemini
+// helper function untuk clean markdown dari response Gemini
 function cleanText(text: string): string {
   return text
-    .replace(/\*\*/g, "") // hapus **bold**
-    .replace(/\*/g, "") // hapus *italic*
-    .replace(/##/g, "") // hapus ##heading
-    .replace(/`/g, "") // hapus `code`
+    .replace(/\*\*/g, "")
+    .replace(/\*/g, "")
+    .replace(/##/g, "")
+    .replace(/`/g, "")
     .trim();
 }
 
@@ -120,17 +273,53 @@ export async function POST(request: NextRequest) {
 
     const text = result.response.text();
 
+    if (text.includes("<ui:Final>")) {
+      let cleanJson = text
+        .replace("<ui:Final>", "")
+        .replace("</ui:Final>", "")
+        .trim();
+
+      // hapus blok markdown kalau ada
+      cleanJson = cleanJson.replace(/```json/g, "").replace(/```/g, "");
+
+      // buang trailing koma
+      cleanJson = cleanJson.replace(/,\s*}/g, "}").replace(/,\s*]/g, "]");
+
+      console.log("RAW FINAL JSON:", cleanJson);
+
+      try {
+        const parsed = JSON.parse(cleanJson);
+
+        return NextResponse.json({
+          type: "complete",
+          text: parsed.resp ?? "Perjalanan berhasil direncanakan!",
+          data: {
+            resp: parsed.resp ?? "",
+            itinerary: parsed.itinerary ?? [],
+            estimasi: parsed.estimasi ?? [],
+            admin: parsed.admin ?? undefined,
+          },
+          options: [],
+        });
+      } catch (err) {
+        console.error("JSON Final Parsing Error:", err);
+        return NextResponse.json({
+          type: "text",
+          text: "Output FINAL AI tidak valid JSON.",
+          options: [],
+        });
+      }
+    }
+
     if (!text) {
       throw new Error("Empty response from Gemini");
     }
 
-    // Parse options dari text (format: 🎒 Label atau 🎒 Label | 🎒 Label)
     const lines = text.split("\n");
     const options: Array<{ id: string; label: string; icon: string }> = [];
     let questionText = "";
 
     for (const line of lines) {
-      // Match emoji + text pattern (emoji di awal, diikuti space/pipe)
       const emojiMatch = line.match(/^([\p{Emoji}])\s+(.+?)(\s*\||\s*$)/u);
 
       if (emojiMatch) {
@@ -142,14 +331,11 @@ export async function POST(request: NextRequest) {
           icon: icon,
         });
       } else if (!line.includes("|") && line.trim() && options.length === 0) {
-        // Baris yang bukan pilihan dan belum ada pilihan = pertanyaan
         questionText += line + "\n";
       }
     }
 
-    // Jika tidak ada pilihan terparse, cek format inline (dengan |)
     if (options.length === 0) {
-      // Split by pipe dan parse setiap pilihan
       const inlineText =
         text.split("\n").find((line) => line.includes("|")) || text;
       const inlineOptions = inlineText
@@ -171,17 +357,14 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // DETEKSI PERTANYAAN dalam urutan yang SPESIFIK dulu SEBELUM yang UMUM
     const fullText = (questionText + " " + text).toLowerCase();
 
-    // Helper: cek apakah text adalah PERTANYAAN (ada ? atau berapa/apa/siapa)
     const isQuestion =
       /\?|^(berapa|apa|siapa|mana|pilih|pilihan|bagaimana|kapan)/m.test(
         fullText
       );
 
     if (!isQuestion) {
-      // Bukan pertanyaan, jadi return as text biasa
       if (options.length === 0) {
         return NextResponse.json({
           type: "text",
@@ -191,7 +374,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // DETEKSI PERTANYAAN MENGGUNAKAN TAG KHUSUS
     if (text.includes("<ui:group>")) {
       return NextResponse.json({
         type: "select-group",
@@ -232,7 +414,6 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Jika masih tidak ada pilihan, return as text
     if (options.length === 0) {
       return NextResponse.json({
         type: "text",
@@ -241,7 +422,6 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Return dengan options yang sudah diparsing
     return NextResponse.json({
       type: "options",
       text: cleanText(questionText.trim() || text.split("\n")[0]),
