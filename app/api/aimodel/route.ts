@@ -1,437 +1,380 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-const PROMPT = `Anda adalah Agen Perencana Perjalanan AI bernama ZenTrip.
+const SYSTEM_PROMPT = `Anda adalah asisten perjalanan AI bernama ZenTrip yang ahli dalam merencanakan perjalanan DETAIL dan SPESIFIK.
 
-Tujuan Anda adalah membantu pengguna merencanakan perjalanan secara interaktif, lengkap, dan realistis.
+ATURAN DETEKSI INPUT AWAL:
+- Jika user bilang "mau ke [kota]" atau "ke [kota]" → Anggap itu TUJUAN, tanya ASAL
+- Jika user bilang "dari [kota] ke [kota]" → Anggap sudah ada ASAL & TUJUAN, lanjut ke group
+- Jika tidak jelas → Tanya asal dulu
 
-## Alur Percakapan
-Ajukan satu pertanyaan kepada pengguna pada satu waktu secara berurutan:
-1. Lokasi awal keberangkatan
-2. Kota atau negara tujuan
-3. Jumlah peserta perjalanan (Solo, Pasangan, Keluarga, Teman)
-4. Anggaran (Rendah, Sedang, Tinggi)
-5. Durasi perjalanan (jumlah hari)
-6. Tema atau minat perjalanan (petualangan, budaya, kuliner, relaksasi, hiburan malam, dll)
+URUTAN PERCAKAPAN (KETAT):
+1. Deteksi tujuan dari input → Tanya kota asal (jika belum ada)
+2. Konfirmasi asal & tujuan → Tampilkan <ui:group>
+3. User pilih group → Tampilkan <ui:budget>
+4. User pilih budget → Tampilkan <ui:duration>
+5. User pilih durasi → Tampilkan <ui:theme>
+6. User pilih tema → LANGSUNG generate <ui:Final> TANPA tanya lagi
 
-Tunggu jawaban pengguna sebelum lanjut ke pertanyaan berikutnya.
+CONTOH FLOW:
+User: "Mau ke Jerman"
+AI: "Baik! Anda ingin ke Jerman. Dari kota mana Anda berangkat?"
+User: "Jakarta"
+AI: "<ui:group>Berapa orang yang akan pergi?</ui:group>"
+User: "2 orang"
+AI: "<ui:budget>Pilih budget perjalanan:</ui:budget>"
+User: "Sedang"
+AI: "<ui:duration>Berapa lama perjalanan?</ui:duration>"
+User: "7 hari"
+AI: "<ui:theme>Pilih tema perjalanan:</ui:theme>"
+User: "Budaya & Sejarah"
+AI: "<ui:Final>{JSON DETAIL}</ui:Final>"
 
-## Setelah semua data diperoleh:
-1. Buatkan **rencana perjalanan (itinerary)** yang SANGAT DETAIL berdasarkan jumlah hari dengan format:
-   
-   **WAJIB INCLUDE:**
-   - Waktu spesifik (jam) untuk setiap aktivitas
-   - Nama hotel/penginapan yang spesifik dengan rating bintang
-   - Nama restoran/tempat makan yang spesifik
-   - Moda transportasi yang detail (nama maskapai, kereta, bus)
-   - Alamat lengkap tempat wisata
-   - Estimasi waktu perjalanan antar lokasi
-   - Tips praktis untuk setiap aktivitas
-
-   Contoh format DETAIL:
-   **Hari 1: Keberangkatan & Check-in**
-   - 05:00 - Berangkat dari rumah menuju Bandara Sultan Hasanuddin, Makassar
-   - 07:30 - Check-in penerbangan Garuda Indonesia GA-1430 (Makassar-Jakarta)
-   - 09:45 - Penerbangan take off
-   - 11:30 - Tiba di Bandara Soekarno-Hatta, transit 2 jam
-   - 13:45 - Penerbangan lanjutan Air Asia AK-387 (Jakarta-Kuala Lumpur)
-   - 16:20 - Tiba di KLIA, Malaysia
-   - 18:00 - Check-in Hotel Grand Hyatt Kuala Lumpur (Bintang 5) - Jalan Pinang
-   - 19:30 - Makan malam di Restoran Atmosphere 360 (Menara KL Tower)
-   - 21:30 - Istirahat di hotel
-   
-   **Hari 2: Eksplorasi Kota**
-   - 07:00 - Sarapan di hotel (buffet internasional)
-   - 09:00 - Berangkat ke Batu Caves naik KTM Komuter dari KL Sentral
-   - 10:30 - Eksplorasi Batu Caves (2 jam) - gratis, bawa air minum
-   - 13:00 - Makan siang di Restoran Sri Nirwana Maju (Little India)
-   - 15:00 - Jalan-jalan di Central Market & Petaling Street
-   - 18:00 - Kembali ke hotel untuk istirahat
-   - 20:00 - Makan malam di Jalan Alor Food Street
-   - 22:00 - Kembali ke hotel
-
-2. Tambahkan **Estimasi Biaya Perjalanan** yang SANGAT DETAIL:
-
-   WAJIB INCLUDE untuk setiap kategori:
-   - Breakdown biaya yang spesifik
-   - Range harga (minimum - maksimum)
-   - Sumber/vendor yang direkomendasikan
-   - Total per orang DAN total rombongan
-
-3. **KHUSUS PERJALANAN LUAR NEGERI - WAJIB DETAIL:**
-   
-   **Persyaratan Visa & Dokumen:**
-   - Status visa (bebas visa/perlu visa/visa on arrival)
-   - Biaya visa: [Currency] [Amount] = Rp [Rupiah]
-   - Waktu proses visa: [X] hari kerja
-   - Dokumen yang diperlukan: [list lengkap]
-   - Alamat kedutaan/konsulat untuk apply visa
-   
-   **Persyaratan Paspor:**
-   - Masa berlaku paspor minimum: [X] bulan
-   - Biaya pembuatan paspor baru: Rp 350,000 (48 halaman) / Rp 655,000 (24 halaman)
-   - Waktu pembuatan: 3-5 hari kerja
-   - Lokasi kantor imigrasi terdekat
-   
-   **Asuransi Perjalanan:**
-   - Rekomendasi provider: [nama perusahaan]
-   - Biaya: Rp [amount] per orang per hari
-   - Coverage minimal: USD 10,000-50,000
-   
-   **Vaksinasi & Kesehatan:**
-   - Vaksin yang diperlukan (jika ada)
-   - Biaya vaksin: Rp [amount] per jenis
-   - Lokasi klinik vaksinasi internasional
-   
-   **Persyaratan Tambahan:**
-   - Tiket pulang-pergi yang sudah dikonfirmasi
-   - Bukti reservasi hotel
-   - Bukti dana mencukupi (rekening koran/travel checque)
-   - SIM Internasional (jika berencana menyetir): Rp 250,000
-
-4. Gunakan kisaran harga **SANGAT REALISTIS dan TERKINI** berdasarkan:
-   - Data harga aktual 2024-2025
-   - Seasonal pricing (high season vs low season)
-   - Weekend vs weekday rates
-   - Negara dengan biaya tinggi (misal Jepang, Korea, Eropa)
-   - Sedang (Thailand, Singapura, Malaysia)
-   - Murah (Vietnam, Indonesia bagian lokal)
-
-5. Gunakan **Rupiah (IDR)** untuk semua estimasi biaya.
-6. Format output dalam bentuk **JSON** agar mudah dibaca oleh sistem.
-
-Tambahkan aturan berikut:
-
-Untuk setiap pertanyaan UI group, budget, duration dan theme Anda HARUS mengembalikan format:
-
-<ui:group>Berapa jumlah peserta perjalanan Anda?</ui:group>
-<ui:budget>Berapa anggaran perjalanan Anda?</ui:budget>
-<ui:duration>Berapa hari durasi perjalanan?</ui:duration>
-<ui:theme>Apa tema perjalanan Anda?</ui:theme>
-
-JANGAN jawab hal lain sampai UI selesai.
-
-
-### Format Output
+FORMAT JSON OUTPUT (WAJIB SUPER DETAIL):
 {
-  "resp": "teks hasil rekomendasi perjalanan dan estimasi biaya lengkap",
-  "ui": "budget | groupSize | TripDuration | Final"
-}
-
-Pastikan seluruh estimasi logis, rinci, dan akurat secara proporsional terhadap lokasi, jumlah peserta, dan durasi.
-Gunakan gaya bahasa sopan, ramah, dan interaktif.
-
-### SCHEMA WAJIB UNTUK OUTPUT FINAL
-Output FINAL wajib mengikuti format JSON berikut dengan DETAIL LENGKAP:
-
-{
-  "resp": "ringkasan perjalanan dalam 1 paragraf singkat",
+  "resp": "Perjalanan 7 hari dari Jakarta ke Jerman untuk 2 orang dengan budget sedang, tema budaya & sejarah. Total estimasi: Rp 45.000.000 - Rp 65.000.000",
   "itinerary": [
     {
-      "day": "Hari 1: Keberangkatan & Check-in",
+      "day": "Hari 1: Tiba di Berlin & Eksplorasi Kota",
       "activities": [
-        "05:00 - Berangkat dari rumah menuju Bandara [Nama], [Kota Asal]",
-        "07:30 - Check-in penerbangan [Maskapai] [Kode Penerbangan] ([Kota Asal]-[Transit/Tujuan])",
-        "09:45 - Penerbangan take off",
-        "11:30 - Tiba di [Bandara Tujuan] / Transit di [Bandara] selama [durasi]",
-        "18:00 - Check-in Hotel [Nama Hotel Spesifik] (Bintang [X]) - [Alamat]",
-        "19:30 - Makan malam di Restoran [Nama Restoran Spesifik] - [Jenis masakan]",
-        "21:30 - Istirahat di hotel"
+        "06:00 - Berangkat dari Soekarno-Hatta Airport (Garuda Indonesia/Lufthansa via transit)",
+        "18:00 - Tiba di Berlin Brandenburg Airport, ambil bagasi, customs",
+        "19:30 - Check-in hotel di kawasan Mitte (NH Collection Berlin Mitte atau setara)",
+        "20:30 - Makan malam di Zur Letzten Instanz, restoran tertua Berlin (masakan Jerman tradisional)",
+        "22:00 - Istirahat di hotel"
       ]
     },
     {
-      "day": "Hari 2: [Tema Aktivitas]",
+      "day": "Hari 2: Wisata Sejarah Berlin",
       "activities": [
-        "07:00 - Sarapan di hotel / [Nama restoran spesifik]",
-        "09:00 - Berangkat ke [Destinasi] naik [transportasi spesifik] dari [lokasi]",
-        "10:30 - Eksplorasi [Tempat Wisata] ([durasi]) - [tips khusus]",
-        "13:00 - Makan siang di [Nama Restoran] - [alamat/area]",
-        "15:00 - [Aktivitas selanjutnya] di [lokasi spesifik]",
-        "18:00 - Kembali ke hotel untuk istirahat",
-        "20:00 - [Aktivitas malam] di [lokasi]",
-        "22:00 - Kembali ke hotel"
+        "08:00 - Sarapan di hotel",
+        "09:00 - Kunjungi Brandenburg Gate (Gerbang Brandenburg), simbol reunifikasi Jerman",
+        "10:00 - Holocaust Memorial, tugu peringatan korban Holocaust",
+        "11:30 - Museum Checkpoint Charlie, museum tentang Perang Dingin",
+        "13:00 - Makan siang di Curry 36 (cobain Currywurst khas Berlin)",
+        "14:30 - East Side Gallery, mural seni di sisa Tembok Berlin (1.3km)",
+        "16:30 - Alexanderplatz, alun-alun terkenal, naik ke TV Tower (optional, €25/orang)",
+        "19:00 - Makan malam di Hofbräu Berlin (masakan Bavaria)",
+        "21:00 - Kembali ke hotel"
       ]
     }
   ],
   "estimasi": [
     {
       "kategori": "Tiket Pesawat (PP)",
-      "rincian": "[Maskapai] [Kota Asal] → [Tujuan] (ekonomi/bisnis)",
-      "estimasi_per_orang": "Rp 3.500.000 - 7.000.000",
-      "total_rombongan": "Rp 7.000.000 - 14.000.000"
+      "rincian": "Jakarta (CGK) - Berlin (BER) pulang-pergi via transit (Garuda Indonesia/Lufthansa/Qatar Airways). Kelas ekonomi. Termasuk 1x bagasi 23kg + carry-on 7kg. Waktu transit 3-6 jam.",
+      "estimasi_per_orang": "Rp 14.000.000 - Rp 18.000.000",
+      "total_rombongan": "Rp 28.000.000 - Rp 36.000.000"
     },
     {
       "kategori": "Akomodasi",
-      "rincian": "[Nama Hotel] [Bintang X] selama [X] malam ([area])",
-      "estimasi_per_orang": "Rp 800.000 - 1.500.000/malam",
-      "total_rombongan": "Rp 1.600.000 - 3.000.000/malam"
+      "rincian": "Hotel bintang 3-4 di pusat kota (Mitte/Prenzlauer Berg area) selama 6 malam. Termasuk sarapan. Tipe kamar: Double/Twin bed. Fasilitas: WiFi, AC, bathroom private. Contoh: NH Collection, Mercure, Motel One.",
+      "estimasi_per_orang": "Rp 800.000 - Rp 1.200.000/malam",
+      "total_rombongan": "Rp 4.800.000 - Rp 7.200.000"
     },
     {
       "kategori": "Transportasi Lokal",
-      "rincian": "[Detail: taxi, MRT, bus, sewa mobil] + bensin/tiket",
-      "estimasi_per_orang": "Rp 300.000 - 600.000",
-      "total_rombongan": "Rp 600.000 - 1.200.000"
+      "rincian": "Berlin Welcome Card 7 hari (unlimited U-Bahn, S-Bahn, bus, tram di zona ABC). Transfer airport-hotel PP dengan S-Bahn. Sesekali Uber/Taxi untuk keperluan darurat atau malam hari.",
+      "estimasi_per_orang": "Rp 600.000 - Rp 900.000",
+      "total_rombongan": "Rp 1.200.000 - Rp 1.800.000"
     },
     {
       "kategori": "Makan & Minum",
-      "rincian": "3x sehari selama [X] hari ([local food/international])",
-      "estimasi_per_orang": "Rp 200.000 - 500.000/hari",
-      "total_rombongan": "Rp 400.000 - 1.000.000/hari"
+      "rincian": "3x makan per hari selama 7 hari. Sarapan included di hotel. Makan siang: €8-15 (doner, currywurst, cafe). Makan malam: €15-25 (restoran lokal, biergarten). Termasuk kopi & snacks. Budget mix antara street food dan restoran casual.",
+      "estimasi_per_orang": "Rp 250.000 - Rp 400.000/hari",
+      "total_rombongan": "Rp 3.500.000 - Rp 5.600.000"
     },
     {
       "kategori": "Tiket Wisata & Aktivitas",
-      "rincian": "[List tempat wisata + harga tiket masing-masing]",
-      "estimasi_per_orang": "Rp 400.000 - 800.000",
-      "total_rombongan": "Rp 800.000 - 1.600.000"
+      "rincian": "Museum Island Day Pass (€19/orang untuk 5 museum), Checkpoint Charlie Museum (€17), TV Tower Berlin (€25, optional), Neuschwanstein Castle day tour (€120), walking tour gratis (tips €5), boat tour di Spree River (€15).",
+      "estimasi_per_orang": "Rp 2.500.000 - Rp 3.500.000",
+      "total_rombongan": "Rp 5.000.000 - Rp 7.000.000"
     },
     {
       "kategori": "Lain-lain",
-      "rincian": "Oleh-oleh, asuransi, emergency fund, tips",
-      "estimasi_per_orang": "Rp 500.000 - 1.000.000",
-      "total_rombongan": "Rp 1.000.000 - 2.000.000"
+      "rincian": "Oleh-oleh (coklat Ritter Sport, beer steins, magnet, Christmas market goods): Rp 1-2 juta. Tips restoran 5-10%. SIM card/eSIM Eropa 10GB: €20/orang. Emergency fund & snacks.",
+      "estimasi_per_orang": "Rp 1.500.000 - Rp 2.500.000",
+      "total_rombongan": "Rp 3.000.000 - Rp 5.000.000"
     }
   ],
   "admin": {
-    "visa": "Bebas Visa 30 hari / Perlu Visa Turis / Visa on Arrival",
-    "biayaVisa": "USD 35 = Rp 525.000 / Gratis / USD 25 = Rp 375.000",
-    "prosesVisa": "3-5 hari kerja / Langsung di bandara / Apply online 3 hari sebelum",
+    "visa": "Diperlukan Schengen Visa (berlaku untuk seluruh negara Schengen area termasuk Jerman)",
+    "biayaVisa": "Rp 1.200.000 per orang (€80)",
+    "prosesVisa": "Proses 15-20 hari kerja, apply minimal 3 bulan sebelum keberangkatan",
     "dokumen": [
-      "Paspor berlaku minimal 6 bulan",
-      "Tiket pulang-pergi yang sudah dikonfirmasi", 
-      "Bukti reservasi hotel",
-      "Bukti dana mencukupi (rekening koran 3 bulan)",
-      "Asuransi perjalanan min. USD 10,000",
-      "Foto 4x6 background putih (jika perlu visa)",
-      "Formulir aplikasi visa (jika perlu)"
+      "Paspor valid minimal 6 bulan",
+      "Foto 3.5x4.5cm background putih (2 lembar)",
+      "Surat sponsor/rekening koran 3 bulan terakhir (saldo min Rp 20 juta)",
+      "Tiket pesawat PP (booking saja, belum bayar)",
+      "Booking hotel/akomodasi",
+      "Asuransi perjalanan min coverage €30.000",
+      "Surat keterangan kerja/usaha",
+      "NPWP & SPT tahunan",
+      "Kartu Keluarga & Akta Nikah (jika ada)"
     ],
     "biayaDokumen": {
-      "paspor": "Rp 350,000 (48 hal) / Rp 655,000 (24 hal)",
-      "asuransi": "Rp 150,000 - 300,000 per orang per minggu",
-      "simInternasional": "Rp 250,000 (jika berencana menyetir)"
+      "paspor": "Rp 350.000 (48 halaman) atau Rp 655.000 (e-passport 48 hal)",
+      "asuransi": "Rp 300.000 - Rp 500.000 (7 hari coverage €30.000)",
+      "foto": "Rp 50.000 (cetak 4 lembar)",
+      "legalisir_dokumen": "Rp 100.000 - Rp 200.000"
     },
     "tips": [
-      "Apply visa minimal 2 minggu sebelum keberangkatan",
-      "Bawa bukti dana dalam bentuk USD cash + kartu kredit",
-      "Download aplikasi translate untuk komunikasi",
-      "Siapkan nomor emergency contact keluarga di Indonesia",
-      "Bawa obat-obatan pribadi + resep dokter dalam bahasa Inggris",
-      "Daftar ke KBRI setempat setelah tiba (untuk perjalanan >30 hari)"
+      "Apply visa minimal 3 bulan sebelum keberangkatan",
+      "Siapkan dana lebih untuk interview visa (jika dipanggil)",
+      "Gunakan jasa VFS Global untuk apply visa Schengen",
+      "Asuransi wajib cover seluruh periode perjalanan + 1 hari",
+      "Booking hotel bisa pakai Booking.com (free cancellation) untuk syarat visa",
+      "Rekening koran harus atas nama sendiri, bukan joint account",
+      "Jika ditolak, uang visa tidak dikembalikan"
     ],
-    "kantorVisa": "[Alamat Kedutaan/Konsulat di Indonesia + jam operasional]"
+    "kantorVisa": "VFS Global Indonesia - Kuningan City Mall, Lt. 1, Jl. Prof. Dr. Satrio Kav. 18, Jakarta Selatan 12940. Jam buka: Senin-Jumat 08:00-14:00. Telp: (021) 5795 7596"
   }
 }
 
-WAJIB mengikuti struktur di atas.
-JANGAN membuat field lain.
-JANGAN mengubah nama field.
-Untuk perjalanan dalam negeri, field admin bisa dikosongkan atau minimal berisi tips umum.
+ATURAN DETAIL ITINERARY:
+- Setiap aktivitas HARUS ada waktu spesifik (format 24 jam)
+- Sebutkan NAMA TEMPAT lengkap, bukan cuma "museum" atau "restoran"
+- Berikan info praktis: harga tiket, durasi kunjungan, cara ke sana
+- Sertakan tips lokal: makanan khas, waktu terbaik berkunjung, dll
+- Jika lintas kota, sebutkan transportasi: kereta (ICE/DB), bus (FlixBus), flight
 
+ATURAN ESTIMASI BIAYA:
+- Semua dalam RUPIAH dengan range realistis
+- Rincian HARUS detail: menyebut nama maskapai, tipe hotel, cara transport
+- Jelaskan apa saja yang included dalam biaya tersebut
+- Berikan context: "kelas ekonomi", "include sarapan", "unlimited rides", dll
 
-Jika seluruh pertanyaan sudah terjawab, keluarkan output FINAL dalam format:
+ATURAN ADMIN/VISA:
+- Jika butuh visa: berikan info lengkap dokumen, biaya, proses
+- Jika tidak butuh visa: tetap kasih info paspor, asuransi, customs
+- Sertakan alamat lengkap kantor visa/konsulat di Indonesia
+- Tips praktis untuk prepare dokumen
 
-<ui:Final>
-{"resp":"...", "itinerary":[...], "estimasi":[...], "admin":{...}}
-</ui:Final>
-
-Jangan tambahkan teks lain. Hanya JSON murni di dalam <ui:Final>.
-`;
+PENTING:
+- Setelah user pilih tema, LANGSUNG generate <ui:Final> tanpa tanya lagi
+- Jangan tambahkan text di luar tag <ui:Final>
+- JSON harus valid tanpa trailing comma
+- Berikan estimasi biaya yang REALISTIS sesuai budget yang dipilih user`;
 
 interface ChatMessage {
   role: "system" | "user" | "assistant";
   content: string;
 }
 
-// helper function untuk clean markdown dari response Gemini
-function cleanText(text: string): string {
-  return text
-    .replace(/\*\*/g, "")
-    .replace(/\*/g, "")
-    .replace(/##/g, "")
-    .replace(/`/g, "")
-    .trim();
+function detectCityMentions(text: string): { asal?: string; tujuan?: string } {
+  const lowerText = text.toLowerCase();
+
+  // Pattern: "dari X ke Y"
+  const fromToPattern = /dari\s+([a-zA-Z\s]+?)\s+ke\s+([a-zA-Z\s]+)/i;
+  const fromToMatch = text.match(fromToPattern);
+  if (fromToMatch) {
+    return {
+      asal: fromToMatch[1].trim(),
+      tujuan: fromToMatch[2].trim(),
+    };
+  }
+
+  // Pattern: "mau ke X", "ke X", "pergi ke X"
+  const toPattern = /(mau|ingin|pengen|pergi)?\s*ke\s+([a-zA-Z\s]+)/i;
+  const toMatch = text.match(toPattern);
+  if (toMatch) {
+    return {
+      tujuan: toMatch[2].trim(),
+    };
+  }
+
+  return {};
 }
 
 export async function POST(request: NextRequest) {
   try {
     const { messages } = (await request.json()) as { messages: ChatMessage[] };
 
-    // gabungkan semua pesan dari pengguna dlm satu percakapan
-    const chatHistory = messages
-      .map((m) => `${m.role}: ${m.content}`)
-      .join("\n");
+    const userMessageCount = messages.filter((m) => m.role === "user").length;
+    const lastUserMessage =
+      messages.filter((m) => m.role === "user").pop()?.content || "";
 
-    const prompt = `${PROMPT}\n\n${chatHistory}`;
+    // === DETEKSI OTOMATIS DARI MESSAGE PERTAMA ===
+    if (userMessageCount === 1) {
+      const detected = detectCityMentions(lastUserMessage);
 
-    const result = await model.generateContent(prompt);
-
-    if (!result.response) {
-      throw new Error("No response from Gemini");
-    }
-
-    const text = result.response.text();
-
-    if (text.includes("<ui:Final>")) {
-      let cleanJson = text
-        .replace("<ui:Final>", "")
-        .replace("</ui:Final>", "")
-        .trim();
-
-      // hapus blok markdown kalau ada
-      cleanJson = cleanJson.replace(/```json/g, "").replace(/```/g, "");
-
-      // buang trailing koma
-      cleanJson = cleanJson.replace(/,\s*}/g, "}").replace(/,\s*]/g, "]");
-
-      console.log("RAW FINAL JSON:", cleanJson);
-
-      try {
-        const parsed = JSON.parse(cleanJson);
-
-        return NextResponse.json({
-          type: "complete",
-          text: parsed.resp ?? "Perjalanan berhasil direncanakan!",
-          data: {
-            resp: parsed.resp ?? "",
-            itinerary: parsed.itinerary ?? [],
-            estimasi: parsed.estimasi ?? [],
-            admin: parsed.admin ?? undefined,
-          },
-          options: [],
-        });
-      } catch (err) {
-        console.error("JSON Final Parsing Error:", err);
+      if (detected.tujuan && !detected.asal) {
+        // User bilang "mau ke X" tapi belum bilang dari mana
         return NextResponse.json({
           type: "text",
-          text: "Output FINAL AI tidak valid JSON.",
+          text: `Baik! Anda ingin ke ${detected.tujuan}. Dari kota mana Anda berangkat?`,
           options: [],
         });
-      }
-    }
-
-    if (!text) {
-      throw new Error("Empty response from Gemini");
-    }
-
-    const lines = text.split("\n");
-    const options: Array<{ id: string; label: string; icon: string }> = [];
-    let questionText = "";
-
-    for (const line of lines) {
-      const emojiMatch = line.match(/^([\p{Emoji}])\s+(.+?)(\s*\||\s*$)/u);
-
-      if (emojiMatch) {
-        const icon = emojiMatch[1];
-        const label = emojiMatch[2].trim();
-        options.push({
-          id: label.toLowerCase().replace(/\s+/g, "_"),
-          label: label,
-          icon: icon,
+      } else if (detected.asal && detected.tujuan) {
+        // User sudah bilang "dari X ke Y"
+        return NextResponse.json({
+          type: "select-group",
+          text: `Sip! Perjalanan dari ${detected.asal} ke ${detected.tujuan}. Berapa orang yang akan pergi?`,
+          options: [],
         });
-      } else if (!line.includes("|") && line.trim() && options.length === 0) {
-        questionText += line + "\n";
-      }
-    }
-
-    if (options.length === 0) {
-      const inlineText =
-        text.split("\n").find((line) => line.includes("|")) || text;
-      const inlineOptions = inlineText
-        .split("|")
-        .map((opt) => opt.trim())
-        .filter((opt) => opt.length > 0);
-
-      for (const option of inlineOptions) {
-        const match = option.match(/^([\p{Emoji}])\s+(.+)$/u);
-        if (match) {
-          const icon = match[1];
-          const label = match[2].trim();
-          options.push({
-            id: label.toLowerCase().replace(/\s+/g, "_"),
-            label: label,
-            icon: icon,
-          });
-        }
-      }
-    }
-
-    const fullText = (questionText + " " + text).toLowerCase();
-
-    const isQuestion =
-      /\?|^(berapa|apa|siapa|mana|pilih|pilihan|bagaimana|kapan)/m.test(
-        fullText
-      );
-
-    if (!isQuestion) {
-      if (options.length === 0) {
+      } else {
+        // Tidak jelas, tanya dari mana
         return NextResponse.json({
           type: "text",
-          text: cleanText(text),
+          text: "Hai! Saya ZenTrip. Dari kota mana Anda akan berangkat?",
           options: [],
         });
       }
     }
 
-    if (text.includes("<ui:group>")) {
-      return NextResponse.json({
-        type: "select-group",
-        text: cleanText(
-          text.replace("<ui:group>", "").replace("</ui:group>", "")
-        ),
-        options: [],
-      });
+    // === HARDCODED FLOW SELANJUTNYA ===
+
+    // Message 2: Jika belum ada group, tampilkan group
+    if (userMessageCount === 2) {
+      const firstMessage =
+        messages.filter((m) => m.role === "user")[0]?.content || "";
+      const detected = detectCityMentions(firstMessage);
+
+      if (detected.asal && detected.tujuan) {
+        // Sudah langsung ke budget karena di message 1 sudah muncul group
+        return NextResponse.json({
+          type: "select-budget",
+          text: "Berapa anggaran yang Anda siapkan untuk perjalanan ini?",
+          options: [],
+        });
+      } else {
+        // Baru mau tampilkan group
+        return NextResponse.json({
+          type: "select-group",
+          text: "Berapa orang yang akan pergi?",
+          options: [],
+        });
+      }
     }
 
-    if (text.includes("<ui:budget>")) {
+    // Message 3: UI Budget
+    if (userMessageCount === 3) {
       return NextResponse.json({
         type: "select-budget",
-        text: cleanText(
-          text.replace("<ui:budget>", "").replace("</ui:budget>", "")
-        ),
+        text: "Berapa anggaran yang Anda siapkan untuk perjalanan ini?",
         options: [],
       });
     }
 
-    if (text.includes("<ui:duration>")) {
+    // Message 4: UI Duration
+    if (userMessageCount === 4) {
       return NextResponse.json({
         type: "select-durasi",
-        text: cleanText(
-          text.replace("<ui:duration>", "").replace("</ui:duration>", "")
-        ),
+        text: "Berapa lama durasi perjalanan yang Anda inginkan?",
         options: [],
       });
     }
 
-    if (text.includes("<ui:theme>")) {
+    // Message 5: UI Theme
+    if (userMessageCount === 5) {
       return NextResponse.json({
         type: "select-tema",
-        text: cleanText(
-          text.replace("<ui:theme>", "").replace("</ui:theme>", "")
-        ),
+        text: "Apa tema atau minat perjalanan Anda?",
         options: [],
       });
     }
 
-    if (options.length === 0) {
-      return NextResponse.json({
-        type: "text",
-        text: cleanText(text),
-        options: [],
+    // Message 6+: LANGSUNG GENERATE FINAL
+    if (userMessageCount >= 6) {
+      const groqMessages = [
+        { role: "system" as const, content: SYSTEM_PROMPT },
+        ...messages.map((m) => ({
+          role:
+            m.role === "assistant" ? ("assistant" as const) : ("user" as const),
+          content: m.content,
+        })),
+        {
+          role: "user" as const,
+          content:
+            "Sekarang buatkan itinerary lengkap dalam format <ui:Final>JSON</ui:Final> yang SANGAT DETAIL.",
+        },
+      ];
+
+      const completion = await groq.chat.completions.create({
+        messages: groqMessages,
+        model: "llama-3.1-8b-instant",
+        temperature: 0.3,
+        max_tokens: 8000,
       });
+
+      const text = completion.choices[0]?.message?.content;
+
+      if (!text) {
+        throw new Error("No response from Groq AI");
+      }
+
+      if (text.includes("<ui:Final>")) {
+        const match = text.match(/<ui:Final>([\s\S]*?)<\/ui:Final>/);
+
+        if (!match) {
+          return NextResponse.json({
+            type: "text",
+            text: "Maaf, terjadi kesalahan saat membuat itinerary. Coba ulangi dari awal.",
+            options: [],
+          });
+        }
+
+        let jsonStr = match[1].trim();
+
+        // Bersihkan JSON
+        jsonStr = jsonStr
+          .replace(/```json/g, "")
+          .replace(/```/g, "")
+          .replace(/,(\s*[}\]])/g, "$1") // hapus trailing comma
+          .trim();
+
+        try {
+          const parsed = JSON.parse(jsonStr);
+
+          // Validasi struktur
+          if (!parsed.itinerary || !Array.isArray(parsed.itinerary)) {
+            throw new Error("Missing itinerary array");
+          }
+          if (!parsed.estimasi || !Array.isArray(parsed.estimasi)) {
+            throw new Error("Missing estimasi array");
+          }
+
+          return NextResponse.json({
+            type: "complete",
+            text: parsed.resp || "Itinerary berhasil dibuat!",
+            data: {
+              resp: parsed.resp || "",
+              itinerary: parsed.itinerary,
+              estimasi: parsed.estimasi,
+              admin: parsed.admin || undefined,
+            },
+            options: [],
+          });
+        } catch (err) {
+          console.error("JSON Parse Error:", err);
+          return NextResponse.json({
+            type: "text",
+            text: "Output AI tidak valid. Silakan coba lagi atau reset percakapan.",
+            options: [],
+          });
+        }
+      } else {
+        return NextResponse.json({
+          type: "text",
+          text: "AI belum siap generate itinerary. Coba kirim pesan lagi.",
+          options: [],
+        });
+      }
     }
 
-    return NextResponse.json({
-      type: "options",
-      text: cleanText(questionText.trim() || text.split("\n")[0]),
-      options: options,
-    });
-  } catch (error) {
-    console.error("Error dari Gemini:", error);
+    // Fallback jika ada yang terlewat
     return NextResponse.json({
       type: "text",
-      text: "Maaf, server AI sedang overload. Coba lagi beberapa detik lagi ya!",
+      text: "Maaf, ada yang terlewat. Bisakah Anda ulangi?",
+      options: [],
+    });
+  } catch (error) {
+    console.error("Error from Groq AI:", error);
+    return NextResponse.json({
+      type: "text",
+      text: "Maaf, terjadi kesalahan pada server AI. Coba lagi nanti.",
       options: [],
     });
   }
