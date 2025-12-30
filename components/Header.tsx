@@ -29,13 +29,13 @@ const Header = () => {
     try {
       await signOut();
     } catch (error) {
-      console.error(error)
+      console.error(error);
       setIsLoggingOut(false);
     }
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white shadow-md w-full">
+    <header className="sticky top-0 z-[60] bg-white shadow-md w-full">
       <div className="flex justify-between items-center px-3 sm:px-4 md:px-6 py-2 sm:py-3">
         {/* Logo */}
         <div className="flex gap-1 sm:gap-2 items-center">

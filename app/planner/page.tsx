@@ -46,6 +46,7 @@ function PlannerContent() {
   const [currentDestination, setCurrentDestination] = useState<string>("");
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
+  const [inputError, setInputError] = useState("");
   const searchParams = useSearchParams();
   const query = searchParams.get("query") || "";
   const [hasAutoSent, setHasAutoSent] = useState(false);
@@ -87,9 +88,71 @@ function PlannerContent() {
   // dapatkan userId dari session
   const userId = session?.user?.id || "guest";
 
+  // Fungsi untuk validasi input
+  const validateInput = (text: string) => {
+    const lowerText = text.toLowerCase();
+
+    // Validasi 1: Cek apakah ada pattern angka + "hari"
+    const dayPattern = /(\d+)\s*hari/i;
+    const dayMatch = text.match(dayPattern);
+
+    if (dayMatch) {
+      const days = parseInt(dayMatch[1]);
+      if (days > 15) {
+        setInputError(
+          "⚠️ Maksimal durasi perjalanan adalah 15 hari. Silakan ubah jumlah hari."
+        );
+        return false;
+      }
+    }
+
+    // validasi format uang 
+    const moneyPattern = /(\d+[\d.,]*)\s*(juta|ribu|rupiah|rp|k|m|rb|jt)/i;
+    const moneyMatch = text.match(moneyPattern);
+
+    if (moneyMatch) {
+      setInputError(
+        "⚠️ Untuk budget, silakan pilih dari ikon yang tersedia: Hemat, Sedang, atau Mewah."
+      );
+      return false;
+    }
+
+    // validasi budget tapi tidak sesuai pilihan
+    const budgetKeywords = ["budget", "anggaran", "biaya", "dana"];
+    const validBudgetOptions = [
+      "sedang",
+      "rendah",
+      "tinggi",
+    ];
+
+    const hasBudgetKeyword = budgetKeywords.some((keyword) =>
+      lowerText.includes(keyword)
+    );
+
+    if (hasBudgetKeyword) {
+      const hasValidOption = validBudgetOptions.some((option) =>
+        lowerText.includes(option)
+      );
+
+      if (!hasValidOption) {
+        setInputError(
+          "⚠️ Untuk budget, silakan pilih dari ikon yang tersedia: Rendah, Sedang, atau Tinggi."
+        );
+        return false;
+      }
+    }
+
+    setInputError("");
+    return true;
+  };
+
   const handleSend = async (customInput?: string) => {
     const value = typeof customInput === "string" ? customInput : input;
     if (!value.trim()) return;
+
+    if (!validateInput(value)) {
+      return; 
+    }
 
     const newMessages: Message[] = [
       ...messages,
@@ -238,6 +301,17 @@ function PlannerContent() {
   };
 
   const handleDurationSelect = async (days: number) => {
+    // validasi hari
+    if (days > 15) {
+      const errorMessage: Message = {
+        sender: "ai",
+        text: "⚠️ Maaf, durasi perjalanan maksimal adalah 15 hari. Silakan pilih durasi yang lebih pendek.",
+        type: "text",
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+      return;
+    }
+
     const newMessages: Message[] = [
       ...messages,
       { sender: "user", text: `${days} hari`, type: "text" } as Message,
@@ -329,7 +403,7 @@ function PlannerContent() {
     <>
       {/* Popup Konfirmasi */}
       {showConfirmPopup && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60">
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 transform transition-all">
             {/* Header */}
             <div className="p-6 pb-4">
@@ -391,7 +465,7 @@ function PlannerContent() {
       )}
 
       {/* Main Content */}
-      <div className="flex h-[90.5vh] bg-gray-50 relative">
+      <div className="flex h-[calc(100vh-60px)] bg-gray-50 relative overflow-hidden">
         {isMobileSidebarOpen && (
           <div
             className="fixed inset-0 z-40 lg:hidden"
@@ -463,7 +537,7 @@ function PlannerContent() {
           {/* pemisah setelah tombol */}
           <div className="border-t border-gray-400 mb-4"></div>
 
-          <div className="space-y-0">
+          <div className="space-y-0 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {trips.length > 0 ? (
               trips.map((trip) => (
                 <div
@@ -628,27 +702,39 @@ function PlannerContent() {
           </div>
 
           {/* input box */}
-          <div className="p-3 sm:p-6 border-t bg-white flex items-center gap-2">
-            <Textarea
-              placeholder="Tulis rencana perjalananmu..."
-              className="flex-1 resize-none h-12 sm:h-18 text-sm sm:text-base"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSend();
-                }
-              }}
-            />
-            <Button
-              onClick={() => handleSend()}
-              disabled={!input.trim()}
-              size="sm"
-              className="sm:size-default"
-            >
-              <Send className="w-4 h-4" />
-            </Button>
+          <div className="p-3 sm:p-6 border-t bg-white">
+            {/* Error message di atas input */}
+            {inputError && (
+              <div className="mb-3 px-4 py-3 bg-red-50 border border-red-300 rounded-lg">
+                <p className="text-red-600 text-sm font-medium">{inputError}</p>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2">
+              <Textarea
+                placeholder="Tulis rencana perjalananmu..."
+                className="flex-1 resize-none h-12 sm:h-18 text-sm sm:text-base"
+                value={input}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  validateInput(e.target.value);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+              />
+              <Button
+                onClick={() => handleSend()}
+                disabled={!input.trim() || !!inputError}
+                size="sm"
+                className="sm:size-default"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </main>
       </div>

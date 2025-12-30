@@ -164,9 +164,6 @@ interface ChatMessage {
 }
 
 function detectCityMentions(text: string): { asal?: string; tujuan?: string } {
-  const lowerText = text.toLowerCase();
-
-  // Pattern: "dari X ke Y"
   const fromToPattern = /dari\s+([a-zA-Z\s]+?)\s+ke\s+([a-zA-Z\s]+)/i;
   const fromToMatch = text.match(fromToPattern);
   if (fromToMatch) {
@@ -176,7 +173,6 @@ function detectCityMentions(text: string): { asal?: string; tujuan?: string } {
     };
   }
 
-  // Pattern: "mau ke X", "ke X", "pergi ke X"
   const toPattern = /(mau|ingin|pengen|pergi)?\s*ke\s+([a-zA-Z\s]+)/i;
   const toMatch = text.match(toPattern);
   if (toMatch) {
@@ -196,26 +192,24 @@ export async function POST(request: NextRequest) {
     const lastUserMessage =
       messages.filter((m) => m.role === "user").pop()?.content || "";
 
-    // === DETEKSI OTOMATIS DARI MESSAGE PERTAMA ===
     if (userMessageCount === 1) {
       const detected = detectCityMentions(lastUserMessage);
 
       if (detected.tujuan && !detected.asal) {
-        // User bilang "mau ke X" tapi belum bilang dari mana
         return NextResponse.json({
           type: "text",
           text: `Baik! Anda ingin ke ${detected.tujuan}. Dari kota mana Anda berangkat?`,
           options: [],
         });
       } else if (detected.asal && detected.tujuan) {
-        // User sudah bilang "dari X ke Y"
+
         return NextResponse.json({
           type: "select-group",
           text: `Sip! Perjalanan dari ${detected.asal} ke ${detected.tujuan}. Berapa orang yang akan pergi?`,
           options: [],
         });
       } else {
-        // Tidak jelas, tanya dari mana
+
         return NextResponse.json({
           type: "text",
           text: "Hai! Saya ZenTrip. Dari kota mana Anda akan berangkat?",
@@ -224,23 +218,21 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // === HARDCODED FLOW SELANJUTNYA ===
+    
 
-    // Message 2: Jika belum ada group, tampilkan group
+    // jika belum ada group, tampilkan group
     if (userMessageCount === 2) {
       const firstMessage =
         messages.filter((m) => m.role === "user")[0]?.content || "";
       const detected = detectCityMentions(firstMessage);
 
       if (detected.asal && detected.tujuan) {
-        // Sudah langsung ke budget karena di message 1 sudah muncul group
         return NextResponse.json({
           type: "select-budget",
           text: "Berapa anggaran yang Anda siapkan untuk perjalanan ini?",
           options: [],
         });
       } else {
-        // Baru mau tampilkan group
         return NextResponse.json({
           type: "select-group",
           text: "Berapa orang yang akan pergi?",
@@ -249,7 +241,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Message 3: UI Budget
     if (userMessageCount === 3) {
       return NextResponse.json({
         type: "select-budget",
@@ -258,7 +249,6 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Message 4: UI Duration
     if (userMessageCount === 4) {
       return NextResponse.json({
         type: "select-durasi",
@@ -267,7 +257,6 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Message 5: UI Theme
     if (userMessageCount === 5) {
       return NextResponse.json({
         type: "select-tema",
@@ -276,7 +265,6 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Message 6+: LANGSUNG GENERATE FINAL
     if (userMessageCount >= 6) {
       const groqMessages = [
         { role: "system" as const, content: SYSTEM_PROMPT },
@@ -318,7 +306,7 @@ export async function POST(request: NextRequest) {
 
         let jsonStr = match[1].trim();
 
-        // Bersihkan JSON
+        // bersihkan JSON
         jsonStr = jsonStr
           .replace(/```json/g, "")
           .replace(/```/g, "")
@@ -328,7 +316,7 @@ export async function POST(request: NextRequest) {
         try {
           const parsed = JSON.parse(jsonStr);
 
-          // Validasi struktur
+          // validasi struktur
           if (!parsed.itinerary || !Array.isArray(parsed.itinerary)) {
             throw new Error("Missing itinerary array");
           }
@@ -364,7 +352,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Fallback jika ada yang terlewat
+    // fallback jika ada yang terlewat
     return NextResponse.json({
       type: "text",
       text: "Maaf, ada yang terlewat. Bisakah Anda ulangi?",
